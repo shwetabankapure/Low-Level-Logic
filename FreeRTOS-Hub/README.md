@@ -1,35 +1,33 @@
-# FreeRTOS Generic Multi-Tasking & Scheduling Framework
+# FreeRTOS Generic Task Scheduling Framework
 
-### ⚡ Low-Level Firmware Architecture Portfolio Project
-
-A robust, modular, and deterministic multi-tasking framework built on **FreeRTOS**. Designed to demonstrate real-time embedded software principles, thread safety, inter-task communication, and structured task prioritization without hardware lock-in.
+A clean, lightweight multi-tasking template built on **FreeRTOS**. I put this together as a baseline architecture for embedded systems—focusing on deterministic timing, safe task communication, and clean priority separation without being tied to specific hardware.
 
 ---
 
-## 🏗️ System Architecture & Task Breakdown
+## ⚙️ How It's Structured
 
-The system implements a cooperative yet prioritized concurrency model using three distinct FreeRTOS tasks communicating via thread-safe primitives.
+The framework runs three tasks with distinct priorities, passing data safely using FreeRTOS queues and mutexes:
 
-| Task Name | Priority | Periodicity / Type | Core Responsibility |
+| Task | Priority | Type | What it does |
 | :--- | :--- | :--- | :--- |
-| **`Task1_Producer`** | High (Priority 3) | Periodic (`100ms` via `vTaskDelayUntil`) | Simulates high-frequency data/sensor acquisition and pushes payloads to the shared queue. |
-| **`Task2_Processor`** | Medium (Priority 2) | Event-Driven (Blocked on Queue) | Receives data packets from the queue, processes state, and protects critical sections using Mutexes. |
-| **`Task3_Background`** | Low (Priority 1) | Periodic (`1000ms` via `vTaskDelay`) | Handles background system health monitoring, telemetry formatting, or diagnostic logging. |
+| **`Task1`** | High (3) | Periodic (`100ms`) | Simulates data/sensor sampling using absolute time pacing (`vTaskDelayUntil`). |
+| **`Task2`** | Medium (2) | Event-Driven | Blocks on the queue until data arrives, then processes it safely. |
+| **`Task3`** | Low (1) | Periodic (`1000ms`) | Handles background checks, heartbeats, or low-priority logging. |
 
 ---
 
-## 🔑 Key Engineering Highlights
+## 💡 Key Design Choices
 
-* **Deterministic Timing (`vTaskDelayUntil`):** Task 1 utilizes absolute time pacing instead of relative delays, preventing cumulative timing drift in periodic data acquisition.
-* **Inter-Task Communication (Queues):** Decouples the data producer (`Task1`) from the consumer (`Task2`) safely using FreeRTOS message queues (`xQueueCreate`) with timeout management.
-* **Resource Protection (Mutexes):** Demonstrates thread safety by protecting shared global states and resources with a Mutex semaphore (`xSemaphoreCreateMutex`).
-* **Scalable Framework Design:** Kept intentionally generic (`DataPacket_t`) so hardware drivers (such as I2C sensors or SPI displays) can be cleanly plugged into the architecture later.
+* **Drift-Free Timing:** Uses `vTaskDelayUntil` in Task 1 instead of standard delays so periodic sampling stays accurate over time.
+* **Decoupled Data Flow:** Uses FreeRTOS queues (`xQueueCreate`) to pass data packets from the producer to the processor cleanly.
+* **Thread Safety:** Protects shared states using mutexes (`xSemaphoreCreateMutex`) to avoid race conditions.
+* **Hardware Agnostic:** Kept intentionally generic (`DataPacket_t`) so real drivers (like I2C/SPI sensors or displays) can easily drop right in later.
 
 ---
 
-## 📂 Repository Structure
+## 📂 Repository Layout
 
 ```text
 Low-Level-Logic/
-├── main.c          # Core scheduler initialization, queue/mutex setup, and task definitions
-└── README.md       # Project documentation and architecture overview
+├── main.c          # Kernel setup, queue/mutex initialization, and task definitions
+└── README.md       # Project documentation
